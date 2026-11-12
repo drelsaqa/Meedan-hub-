@@ -1,0 +1,249 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'a01119697113@gmail.com'
+      );
+    }
+
+    function isValidUserPreferences(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'preferredLang', 'preferredZone', 'preferredTier', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'preferredLang', 'preferredZone', 'preferredTier', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.preferredLang is string && data.preferredLang in ['ar', 'en']
+        && data.preferredZone is string && data.preferredZone in ['window', 'collab', 'quiet']
+        && data.preferredTier is string && data.preferredTier in ['freelancer', 'student', 'startup']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'phone', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 32))
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll([
+          'userId', 'passId', 'spaceId', 'spaceLabel', 'isDesk',
+          'date', 'timeSlot', 'tier', 'totalEgp', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'passId', 'spaceId', 'spaceLabel', 'isDesk',
+          'date', 'timeSlot', 'tier', 'totalEgp', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && isValidId(data.userId)
+        && data.passId is string && data.passId.size() >= 5 && data.passId.size() <= 32
+        && data.spaceId is string && data.spaceId.size() >= 2 && data.spaceId.size() <= 32 && isValidId(data.spaceId)
+        && data.spaceLabel is string && data.spaceLabel.size() >= 2 && data.spaceLabel.size() <= 140
+        && data.isDesk is bool
+        && data.date is string && data.date.size() >= 8 && data.date.size() <= 20
+        && data.timeSlot is string && data.timeSlot in ['morning', 'evening', 'fullday']
+        && data.tier is string && data.tier in ['freelancer', 'student', 'startup']
+        && data.totalEgp is number && data.totalEgp >= 0 && data.totalEgp <= 50000
+        && data.status is string && data.status in ['confirmed', 'cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOccupiedSpace(data, spaceId) {
+      return data.keys().hasAll(['spaceId', 'isDesk', 'bookedByUid', 'createdAt'])
+        && data.keys().hasOnly(['spaceId', 'isDesk', 'bookedByUid', 'createdAt'])
+        && data.spaceId is string && data.spaceId == spaceId && data.spaceId.size() >= 2 && data.spaceId.size() <= 32
+        && data.isDesk is bool
+        && data.bookedByUid is string && data.bookedByUid == request.auth.uid && isValidId(data.bookedByUid)
+        && data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    function isValidEnrollment(data) {
+      return data.keys().hasAll(['userId', 'trackId', 'trackTitle', 'applicantName', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'trackId', 'trackTitle', 'applicantName', 'createdAt'])
+        && data.userId is string && data.userId == request.auth.uid && isValidId(data.userId)
+        && data.trackId is string && data.trackId.size() >= 2 && data.trackId.size() <= 64 && isValidId(data.trackId)
+        && data.trackTitle is string && data.trackTitle.size() >= 2 && data.trackTitle.size() <= 160
+        && data.applicantName is string && data.applicantName.size() >= 2 && data.applicantName.size() <= 100
+        && data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    function isValidMentorBooking(data) {
+      return data.keys().hasAll(['userId', 'mentorId', 'mentorName', 'slotLabel', 'topic', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'mentorId', 'mentorName', 'slotLabel', 'topic', 'createdAt'])
+        && data.userId is string && data.userId == request.auth.uid && isValidId(data.userId)
+        && data.mentorId is string && data.mentorId.size() >= 2 && data.mentorId.size() <= 64 && isValidId(data.mentorId)
+        && data.mentorName is string && data.mentorName.size() >= 2 && data.mentorName.size() <= 120
+        && data.slotLabel is string && data.slotLabel.size() >= 2 && data.slotLabel.size() <= 80
+        && data.topic is string && data.topic.size() >= 4 && data.topic.size() <= 300
+        && data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    function isValidEventRsvp(data) {
+      return data.keys().hasAll(['userId', 'eventId', 'eventTitle', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'eventId', 'eventTitle', 'createdAt'])
+        && data.userId is string && data.userId == request.auth.uid && isValidId(data.userId)
+        && data.eventId is string && data.eventId.size() >= 2 && data.eventId.size() <= 64 && isValidId(data.eventId)
+        && data.eventTitle is string && data.eventTitle.size() >= 2 && data.eventTitle.size() <= 160
+        && data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    function isValidSupportTicket(data) {
+      return data.keys().hasAll([
+          'userId', 'ticketCode', 'senderName', 'senderEmail',
+          'category', 'subject', 'message', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'ticketCode', 'senderName', 'senderEmail', 'senderPhone',
+          'category', 'subject', 'message', 'status', 'adminReply', 'createdAt', 'updatedAt'
+        ])
+        && data.userId is string && isValidId(data.userId)
+        && data.ticketCode is string && data.ticketCode.size() >= 5 && data.ticketCode.size() <= 32
+        && data.senderName is string && data.senderName.size() >= 2 && data.senderName.size() <= 100
+        && data.senderEmail is string && data.senderEmail.size() >= 3 && data.senderEmail.size() <= 160
+        && (!('senderPhone' in data) || (data.senderPhone is string && data.senderPhone.size() <= 32))
+        && data.category is string && data.category in ['inquiry', 'complaint', 'support']
+        && data.subject is string && data.subject.size() >= 3 && data.subject.size() <= 160
+        && data.message is string && data.message.size() >= 8 && data.message.size() <= 1200
+        && data.status is string && data.status in ['open', 'in_progress', 'resolved']
+        && (!('adminReply' in data) || (data.adminReply is string && data.adminReply.size() <= 1200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow write: if false;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow create: if isValidId(userId) && isOwner(userId) && isVerifiedUser()
+        && isValidUserPreferences(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isOwner(userId) && isVerifiedUser()
+        && isValidUserPreferences(incoming(), userId)
+        && incoming().createdAt == existing().createdAt
+        && incoming().uid == existing().uid
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferredLang', 'preferredZone', 'preferredTier', 'updatedAt']);
+
+      match /private/info {
+        allow get: if isValidId(userId) && isOwner(userId);
+        allow create: if isValidId(userId) && isOwner(userId) && isVerifiedUser()
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().updatedAt == request.time;
+        allow update: if isValidId(userId) && isOwner(userId) && isVerifiedUser()
+          && isValidUserPrivateInfo(incoming(), userId)
+          && incoming().uid == existing().uid
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'phone', 'updatedAt']);
+      }
+    }
+
+    match /bookings/{bookingId} {
+      allow get: if isValidId(bookingId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(bookingId) && isVerifiedUser()
+        && isValidBooking(incoming())
+        && incoming().userId == request.auth.uid
+        && incoming().status == 'confirmed'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(bookingId) && isVerifiedUser()
+        && isValidBooking(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && (
+          isAdmin() ||
+          (existing().userId == request.auth.uid && existing().status == 'confirmed' && incoming().status == 'cancelled')
+        );
+    }
+
+    match /occupiedSpaces/{spaceId} {
+      allow get: if isValidId(spaceId);
+      allow list: if true;
+      allow create: if isValidId(spaceId) && isVerifiedUser()
+        && isValidOccupiedSpace(incoming(), spaceId);
+      allow delete: if isValidId(spaceId) && isVerifiedUser()
+        && (existing().bookedByUid == request.auth.uid || isAdmin());
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow get: if isValidId(enrollmentId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(enrollmentId) && isVerifiedUser()
+        && isValidEnrollment(incoming());
+    }
+
+    match /mentorBookings/{mentorBookingId} {
+      allow get: if isValidId(mentorBookingId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(mentorBookingId) && isVerifiedUser()
+        && isValidMentorBooking(incoming());
+    }
+
+    match /eventRsvps/{rsvpId} {
+      allow get: if isValidId(rsvpId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(rsvpId) && isVerifiedUser()
+        && isValidEventRsvp(incoming());
+      allow delete: if isValidId(rsvpId) && isVerifiedUser()
+        && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    match /supportTickets/{ticketId} {
+      allow get: if isValidId(ticketId) && isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(ticketId) && isVerifiedUser()
+        && isValidSupportTicket(incoming())
+        && incoming().userId == request.auth.uid
+        && incoming().status == 'open'
+        && !('adminReply' in incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(ticketId) && isAdmin()
+        && isValidSupportTicket(incoming())
+        && incoming().userId == existing().userId
+        && incoming().ticketCode == existing().ticketCode
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminReply', 'updatedAt']);
+    }
+  }
+}

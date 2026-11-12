@@ -1,0 +1,403 @@
+{
+  "entities": {
+    "UserPreferences": {
+      "title": "UserPreferences",
+      "description": "Authenticated Meedan Hub member workspace preferences and language settings.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "preferredLang": {
+          "type": "string",
+          "enum": ["ar", "en"]
+        },
+        "preferredZone": {
+          "type": "string",
+          "enum": ["window", "collab", "quiet"]
+        },
+        "preferredTier": {
+          "type": "string",
+          "enum": ["freelancer", "student", "startup"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "preferredLang", "preferredZone", "preferredTier", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document for authenticated user email and mobile number.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "AdminMember": {
+      "title": "AdminMember",
+      "description": "Trusted administrator marker document keyed by UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "grantedAt"]
+    },
+    "SpaceBooking": {
+      "title": "SpaceBooking",
+      "description": "Workspace desk, meeting room, training hall, or call pod reservation with QR pass ID.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "passId": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 32
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "spaceLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 140
+        },
+        "isDesk": {
+          "type": "boolean"
+        },
+        "date": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "timeSlot": {
+          "type": "string",
+          "enum": ["morning", "evening", "fullday"]
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["freelancer", "student", "startup"]
+        },
+        "totalEgp": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["confirmed", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "passId",
+        "spaceId",
+        "spaceLabel",
+        "isDesk",
+        "date",
+        "timeSlot",
+        "tier",
+        "totalEgp",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OccupiedSpace": {
+      "title": "OccupiedSpace",
+      "description": "Public non-PII occupancy marker for floor map availability.",
+      "type": "object",
+      "properties": {
+        "spaceId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "isDesk": {
+          "type": "boolean"
+        },
+        "bookedByUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["spaceId", "isDesk", "bookedByUid", "createdAt"]
+    },
+    "TrackEnrollment": {
+      "title": "TrackEnrollment",
+      "description": "User application/seat reservation in an accredited Meedan Academy track.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "trackId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "trackTitle": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "applicantName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "trackId", "trackTitle", "applicantName", "createdAt"]
+    },
+    "MentorBooking": {
+      "title": "MentorBooking",
+      "description": "User reservation for a free 30-minute mentorship clinic slot.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mentorId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mentorName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "slotLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "mentorId", "mentorName", "slotLabel", "topic", "createdAt"]
+    },
+    "EventRsvp": {
+      "title": "EventRsvp",
+      "description": "User RSVP registration for a community event at Meedan Hub.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "eventId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "eventTitle": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "eventId", "eventTitle", "createdAt"]
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "Customer support inquiry, complaint, or facility feedback submitted by a member.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ticketCode": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 32
+        },
+        "senderName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "senderEmail": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "senderPhone": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "category": {
+          "type": "string",
+          "enum": ["inquiry", "complaint", "support"]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "message": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open", "in_progress", "resolved"]
+        },
+        "adminReply": {
+          "type": "string",
+          "maxLength": 1200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "ticketCode",
+        "senderName",
+        "senderEmail",
+        "category",
+        "subject",
+        "message",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPreferences" },
+      "description": "Member workspace preferences and language settings, strictly owned by userId."
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII (email, phone) strictly accessible only by the owning user."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminMember" },
+      "description": "Admin role registry checked by Firestore security rules."
+    },
+    "/bookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/SpaceBooking" },
+      "description": "Space bookings and QR pass history owned by userId, readable/manageable by admins."
+    },
+    "/occupiedSpaces/{spaceId}": {
+      "schema": { "$ref": "#/entities/OccupiedSpace" },
+      "description": "Non-PII live occupancy markers for the interactive 400m² floor map."
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": { "$ref": "#/entities/TrackEnrollment" },
+      "description": "Academy track applications owned by userId, readable by admins."
+    },
+    "/mentorBookings/{mentorBookingId}": {
+      "schema": { "$ref": "#/entities/MentorBooking" },
+      "description": "Mentorship clinic 30-min bookings owned by userId, readable by admins."
+    },
+    "/eventRsvps/{rsvpId}": {
+      "schema": { "$ref": "#/entities/EventRsvp" },
+      "description": "Community event RSVPs owned by userId, readable by admins."
+    },
+    "/supportTickets/{ticketId}": {
+      "schema": { "$ref": "#/entities/SupportTicket" },
+      "description": "Customer support inquiries and complaints owned by userId and managed by admins."
+    }
+  }
+}
