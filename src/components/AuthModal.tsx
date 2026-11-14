@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ShieldCheck, X, Loader2, LogIn, UserPlus } from "lucide-react";
+import { X, Loader2, LogIn, UserPlus } from "lucide-react";
+import meedanLogo from "../assets/images/meedan-logo.jpg";
 import { Lang } from "../data/meedanData";
 import { useAuth } from "../context/AuthContext";
 
@@ -67,9 +68,13 @@ export function AuthModal({
     >
       <div className="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 sm:p-7 space-y-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="w-10 h-10 rounded-xl bg-[#1B5E7A] text-white flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#F4B41A]" />
+          <div className="flex items-center gap-3">
+            <span className="h-12 px-1.5 py-0.5 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src={meedanLogo}
+                alt={lang === "ar" ? "شعار ميدان هب" : "Meedan Hub Logo"}
+                className="h-full w-auto object-contain"
+              />
             </span>
             <div>
               <h3 className="text-lg font-black text-slate-900">

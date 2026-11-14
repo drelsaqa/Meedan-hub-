@@ -75,12 +75,16 @@ function MeedanHubContent() {
 
   // Sync URL hash <-> activePage so browser Back/Forward works seamlessly
   useEffect(() => {
-    const onHashChange = () => {
+    const onSyncRoute = () => {
       setActivePage(getInitialPage());
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("hashchange", onSyncRoute);
+    window.addEventListener("popstate", onSyncRoute);
+    return () => {
+      window.removeEventListener("hashchange", onSyncRoute);
+      window.removeEventListener("popstate", onSyncRoute);
+    };
   }, []);
 
   const navigateTo = useCallback((page: AppPage) => {

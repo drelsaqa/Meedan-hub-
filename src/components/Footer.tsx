@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import meedanLogo from "../assets/images/meedan-logo.jpg";
 import { Lang } from "../data/meedanData";
 import { AppPage } from "./PageHeaderBar";
 
@@ -14,9 +14,13 @@ export function Footer({ lang, onNavigate, onOpenAssistant }: FooterProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-5 space-y-3">
-            <div className="flex items-center gap-2.5 text-white">
-              <span className="w-8 h-8 rounded-lg bg-[#1B5E7A] flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4 text-[#F4B41A]" />
+            <div className="flex items-center gap-3 text-white">
+              <span className="h-14 px-2 py-1 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                <img
+                  src={meedanLogo}
+                  alt={lang === "ar" ? "شعار ميدان هب" : "Meedan Hub Logo"}
+                  className="h-full w-auto object-contain"
+                />
               </span>
               <span className="text-lg font-extrabold tracking-tight">
                 {lang === "ar" ? "Meedan Hub | ميدان هب" : "Meedan Hub · Cairo"}
